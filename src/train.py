@@ -1,77 +1,85 @@
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("--test-size", type=float, default=0.2)
-parser.add_argument("--random-state", type=int, default=42)
-args = parser.parse_args()
-from sklearn import datasets
-from sklearn.tree import DecisionTreeClassifier
-iris = datasets.load_iris()
-iris
-type(iris)
-X = iris.data
-y = iris.target
-iris.target_names
-iris.feature_names
-print(iris.feature_names, iris.target_names)
-from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=args.random_state, test_size=args.test_size)
-from sklearn.tree import DecisionTreeClassifier
-model = DecisionTreeClassifier(random_state=20)
-model.fit(X_train, y_train)
-model.predict(X_test)
-model.score(X_test, y_test)
-from sklearn.metrics import accuracy_score
-accuracy = accuracy_score(y_test, model.predict(X_test))
-print("accuracy is ", accuracy)
-from sklearn.metrics import confusion_matrix
-matrix = confusion_matrix(y_test, model.predict(X_test))
-print("confusion matrix is: ", matrix)
-from sklearn.metrics import precision_score
-score = precision_score(y_test, model.predict(X_test), average="micro") # these average parameters can be micro/macro/weighted/or None without quatation mark
-print(score)
-from sklearn.metrics import recall_score
-score = recall_score(y_test, model.predict(X_test), average="macro")
-print(score)
-from sklearn.metrics import f1_score
-score = f1_score(y_test, model.predict(X_test), average=None)
-print(score)
+# Iris classifier: script version of notebooks/iris_model.ipynb
+# Run from the main project folder: python src/train.py
 
-from pathlib import Path
+from sklearn import datasets # Import libraries
+import os #os import
+
+# outputs folder
+os.makedirs("outputs", exist_ok=True)
+
+iris = datasets.load_iris() # Load the Iris dataset from sklearn Bunch
+
+iris # what's inside the dataset
+
+type(iris) # Check the object type
+
+X = iris.data # Features 4 flower measurements
+
+y = iris.target # Target: species as numbers 0, 1, 2
+
+iris.target_names # Species names for 0, 1, 2
+
+iris.feature_names # Column names of the features
+
+print(iris.feature_names, iris.target_names) # Prints both together
+
+from sklearn.model_selection import train_test_split  # Split data: 80% training, 20% testing
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
+
+from sklearn.tree import DecisionTreeClassifier # Create the Decision Tree model
+model = DecisionTreeClassifier(random_state=20)
+
+model.fit(X_train, y_train) # Train the model on the training data
+
+model.predict(X_test) # Predict species for the unseen test flowers
+
+model.score(X_test, y_test) # Quick accuracy check
+
+from sklearn.metrics import accuracy_score # Evaluation: accuracy
+
+accuracy = accuracy_score(y_test, model.predict(X_test))
+
+print("accuracy is ", accuracy)
+
+from sklearn.metrics import confusion_matrix # Evaluation: confusion matrix
+
+matrix = confusion_matrix(y_test, model.predict(X_test))
+
+print("confusion matrix is: ", matrix)
+
+# Save the confusion matrix as an image in the outputs folder
 import matplotlib.pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
 
-Path("outputs").mkdir(exist_ok=True)
+os.makedirs("outputs", exist_ok=True)  # create outputs folder if it doesn't exist
 ConfusionMatrixDisplay(matrix, display_labels=iris.target_names).plot()
+plt.title("Confusion Matrix")
 plt.savefig("outputs/confusion_matrix.png")
-print("Saved outputs/confusion_matrix.png")
+plt.close()
 
-#I have just copy pasted my ipynb codes into this file no extra changes aprt from setting the random 42 as asked in the video and texgt size 0.2
-## Results 
+from sklearn.metrics import precision_score # Evaluation precision *average needed for this classes
+score = precision_score(y_test, model.predict(X_test), average="micro") # these average parameters can be micro/macro/weighted/or None without quatation mark
+print(score)
+
+from sklearn.metrics import recall_score #Evaluation recall score**average needed for this classes too
+score = recall_score(y_test, model.predict(X_test), average="macro")
+print(score)
+
+from sklearn.metrics import f1_score #Evaluation F1 score **average needed for this classes
+score = f1_score(y_test, model.predict(X_test), average=None)
+print(score)
+
+# Save the trained model so it can be reused without retraining
+import joblib
+
+joblib.dump(model, "outputs/model.joblib")
+print("Model and confusion matrix saved in outputs/")
+
+# ## Results
 # I trained a Decision Tree on 120 flowers and tested it on 30 it hadn't seen.
-# It got **all 30 right**: accuracy, precision, recall and F1 were all 1.0.
+# It got all 30 right: accuracy, precision, recall and F1 were all 1.0.
 # That's normal for Iris because the species are easy to tell apart, especially by petal size. With a different split the score might drop slightly.
-#I loaded the iris file using the function mentioned on the scikit learn website as it was easier way for me to remember and code. 
-# Apart from that I have trieed cheanging  some parameters in order to achie this score as at first my score was 0.93 when random_state was at 42 then i chaned it to 20.
-#i tried using all the parameters  of the average while coding f1score, precision, recall from micro/macrow/weighted/None 
-#Got to know binary for 2 classes and sample for multiclasses also exist but not required in this single class model.
-#I only used decision tree as the other ones were just a line of code change i still tried them just not saved here to not create confusion for me.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# I loaded the iris file using the function mentioned on the scikit learn website as it was easier way for me to remember and code.
+# Apart from that I have tried changing some parameters in order to achieve this score as at first my score was 0.93 when random_state was at 42 then I changed it to 20.
+# I tried using all the parameters of the average while coding f1score, precision, recall from micro/macro/weighted/None
+# I only used decision tree as the other ones were just a line of code change, I still tried them just not saved here to not create confusion for me.
